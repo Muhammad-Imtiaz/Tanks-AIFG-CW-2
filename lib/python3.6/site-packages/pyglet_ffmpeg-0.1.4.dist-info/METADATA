@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: pyglet-ffmpeg
+Version: 0.1.4
+Summary: Platform wheels with ffmpeg binaries and ctypes for pyglet
+Home-page: https://github.com/pythonarcade/pyglet-ffmpeg
+Author: Daniel Gillet
+Author-email: dan.gillet737@gmail.com
+License: UNKNOWN
+Requires-Dist: pyglet (>=1.4.0a1)
+
+pyglet-ffmpeg
+
+
