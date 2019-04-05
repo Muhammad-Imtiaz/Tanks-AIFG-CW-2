@@ -1,3 +1,6 @@
+from copy import deepcopy
+import random
+import time
 import arcade
 import math
 import sys
@@ -8,24 +11,25 @@ class Tanks(arcade.Window):
     grid = []
 
     up_1 = 11
-    down_1 = 12
-    left_1 = 13
-    right_1 = 14
+    down_1 = 13
+    left_1 = 14
+    right_1 = 12
 
     up_2 = 21
-    down_2 = 22
-    left_2 = 23
-    right_2 = 24
+    down_2 = 23
+    left_2 = 24
+    right_2 = 22
 
     up_3 = 31
-    down_3 = 32
-    left_3 = 33
-    right_3 = 34
+    down_3 = 33
+    left_3 = 34
+    right_3 = 32
 
     up_4 = 41
-    down_4 = 42
-    left_4 = 43
-    right_4 = 44
+    down_4 = 43
+    left_4 = 44
+    right_4 = 42
+
     SPRITE_SCALING_PLAYER = 0.2
     stone = 100
 
@@ -212,6 +216,10 @@ class Tanks(arcade.Window):
 
         # This command should happen before we start drawing. It will clear
         # the screen to the background color, and erase what we drew last frame.
+
+        time.sleep(5)
+        self.grid = self.make_move(self.grid, self.turn)
+        self.turn = self.turn_change(self.turn)
         arcade.start_render()
         self.draw_screen()
 
@@ -221,6 +229,7 @@ class Tanks(arcade.Window):
 
     def turn_change(self, turn):
         if turn is 1:
+            print(turn)
             turn = 2
         elif turn is 2:
             turn = 3
@@ -230,13 +239,91 @@ class Tanks(arcade.Window):
             turn = 1
         return turn
 
+    def update(self, delta_time):
+        """
+        All the logic to move, and the game logic goes here.
+        Normally, you'll call update() on the sprite lists that
+        need it.
+        """
+        self.player_list.update()
 
+
+    def generate_childern(self, board, turn):
+
+        list = []
+        copy1 = deepcopy(board)
+        copy2 = deepcopy(board)
+        copy3 = deepcopy(board)
+        copy4 = deepcopy(board)
+        copy5 = deepcopy(board)
+        copy6 = deepcopy(board)
+
+        i, j = self.get_current_pos(board, turn)
+        direction = self.get_current_direction(board, turn)
+
+        if j + 1 < self.size:
+            if copy1[i][j + 1] is 0:
+                copy1[i][j] = 0
+                copy1[i][j + 1] = direction
+                list.append(copy1)
+
+        i, j = self.get_current_pos(board, turn)
+        if j - 1 >= 0:
+            if copy2[i][j - 1] is 0:
+                copy2[i][j] = 0
+                copy2[i][j - 1] = direction
+                list.append(copy2)
+
+        i, j = self.get_current_pos(board, turn)
+        if i + 1 < self.size:
+            if copy3[i + 1][j] is 0:
+                copy3[i][j] = 0
+                copy3[i + 1][j] = direction
+                list.append(copy3)
+
+        i, j = self.get_current_pos(board, turn)
+        if i - 1 >= 0:
+            if copy4[i - 1][j] is 0:
+                copy4[i][j] = 0
+                copy4[i - 1][j] = direction
+                list.append(copy4)
+
+        # # childern for direction
+        i, j = self.get_current_pos(board, turn)
+        child_1, child_2 = self.get_childern__by_direction(direction, turn)
+        copy5[i][j] = child_1
+        copy6[i][j] = child_2
+        list.append(copy5)
+        list.append(copy6)
+
+        return list
+
+    def get_childern__by_direction(self, direction, turn):
+        if direction is turn*10 + 1 or direction is turn*10 + 3:
+            return turn * 10 + 2, turn * 10 + 4
+        elif direction is turn*10 + 2 or direction is turn*10 + 4:
+            return turn * 10 + 1, turn * 10 + 3
+
+
+    def get_current_pos(self, board, turn):
+        for i in range(self.size):
+            for j in range(self.size):
+                if (board[i][j] is turn*10+1) or (board[i][j] is turn*10+2) or (board[i][j] is turn*10+3) or (board[i][j] is turn*10+4):
+                    return i, j
+
+    def get_current_direction(self, board, turn):
+        i, j = self.get_current_pos(board, turn)
+        direction = board[i][j]
+        return direction
+
+    def make_move(self, board, turn):
+        return random.choice(self.generate_childern(board, turn))
 
 
 
 def main():
     """ Main method """
-    game = Tanks(650, 650, "Snails")
+    game = Tanks(650, 650, "Tanks")
     game.setup()
     arcade.run()
 
