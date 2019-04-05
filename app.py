@@ -52,7 +52,7 @@ class Tanks(arcade.Window):
         self.grid[0][0] = self.right_1
         self.grid[0][self.size - 1] = self.down_2
         self.grid[self.size - 1][0] = self.up_4
-        self.grid[self.size - 1][self.size - 1] = self.left_4
+        self.grid[self.size - 1][self.size - 1] = self.left_3
 
         for i in range(3):
             self.grid[i][7] = self.stone
