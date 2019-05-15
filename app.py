@@ -5,10 +5,25 @@ import arcade
 import math
 import sys
 
+
 class Tanks(arcade.Window):
     size = 15
-    turn = 1
+    turn = 4
     grid = []
+
+    fire = 50
+
+    score_board_p1 = []
+    score_board_p2 = []
+    score_board_p3 = []
+    score_board_p4 = []
+
+    tank_destroying_score = 50
+
+    score_p1 = 0
+    score_p2 = 0
+    score_p3 = 0
+    score_p4 = 0
 
     up_1 = 11
     down_1 = 13
@@ -30,7 +45,8 @@ class Tanks(arcade.Window):
     left_4 = 44
     right_4 = 42
 
-    SPRITE_SCALING_PLAYER = 0.2
+    SPRITE_SCALING_PLAYER = 0.18
+    SPRITE_SCALING_PLAYER1 = 0.82
     stone = 100
 
     def __init__(self, width, height, title):
@@ -40,8 +56,9 @@ class Tanks(arcade.Window):
         self.player_sprite = None
         self.sprite_list = None
 
-        arcade.set_background_color(arcade.color.AMAZON)
+        arcade.set_background_color(arcade.color.WHITE)
         self.initialize_grid()
+        self.initialize_score_board()
 
     def initialize_grid(self):
         for row in range(self.size):
@@ -50,7 +67,7 @@ class Tanks(arcade.Window):
                 self.grid[row].append(0)
 
         self.grid[0][0] = self.right_1
-        self.grid[0][self.size - 1] = self.down_2
+        self.grid[0][1] = self.down_2
         self.grid[self.size - 1][0] = self.up_4
         self.grid[self.size - 1][self.size - 1] = self.left_3
 
@@ -58,7 +75,7 @@ class Tanks(arcade.Window):
             self.grid[i][7] = self.stone
             self.grid[7][i] = self.stone
         i = 14
-        while i>11:
+        while i > 11:
             self.grid[i][7] = self.stone
             self.grid[7][i] = self.stone
             i -= 1
@@ -87,6 +104,27 @@ class Tanks(arcade.Window):
         self.grid[11][10] = self.stone
         self.grid[11][11] = self.stone
 
+    def initialize_score_board(self):
+        for row in range(self.size):
+            self.score_board_p1.append([])
+            self.score_board_p2.append([])
+            self.score_board_p3.append([])
+            self.score_board_p4.append([])
+            for column in range(self.size):
+                self.score_board_p1[row].append(0)
+                self.score_board_p2[row].append(0)
+                self.score_board_p3[row].append(0)
+                self.score_board_p4[row].append(0)
+        self.score_board_p1[0][0] = 1
+        self.score_board_p2[0][self.size - 1] = 2
+        self.score_board_p3[self.size - 1][self.size - 1] = 3
+        self.score_board_p4[self.size - 1][0] = 4
+        # add scores to 1 initially
+        self.score_p1 += 1
+        self.score_p2 += 1
+        self.score_p3 += 1
+        self.score_p4 += 1
+
     def draw_screen(self):
 
         ri = self.width / self.size
@@ -105,96 +143,166 @@ class Tanks(arcade.Window):
                 bh = self.height / self.size
                 ri = int(bw / 2)
                 ci = int(bh / 2)
-                if self.grid[i][j] is self.right_1:
+
+                if self.grid[i][j] is 0:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
+
+                elif self.grid[i][j] is self.right_1:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("1_right.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
 
                 elif self.grid[i][j] is self.left_1:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("1_left.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
                     # arcade.draw_circle_filled(i * bw + ri, j * bh + ci, bw / 4, arcade.color.AMAZON)
                 elif self.grid[i][j] is self.up_1:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("1_up.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
                 elif self.grid[i][j] is self.down_1:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("1_down.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
 
                 elif self.grid[i][j] is self.right_2:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("2_right.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
 
-
                 elif self.grid[i][j] is self.left_2:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("2_left.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
                     # arcade.draw_circle_filled(i * bw + ri, j * bh + ci, bw / 4, arcade.color.AMAZON)
                 elif self.grid[i][j] is self.up_2:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("2_up.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
                 elif self.grid[i][j] is self.down_2:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("2_down.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
 
                 elif self.grid[i][j] is self.right_3:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("3_right.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
 
-
                 elif self.grid[i][j] is self.left_3:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("3_left.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
+
                     # arcade.draw_circle_filled(i * bw + ri, j * bh + ci, bw / 4, arcade.color.AMAZON)
                 elif self.grid[i][j] is self.up_3:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("3_up.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
+
                 elif self.grid[i][j] is self.down_3:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("3_down.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
 
                 elif self.grid[i][j] is self.right_4:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("4_right.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
 
-
                 elif self.grid[i][j] is self.left_4:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("4_left.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
                     # arcade.draw_circle_filled(i * bw + ri, j * bh + ci, bw / 4, arcade.color.AMAZON)
                 elif self.grid[i][j] is self.up_4:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("4_up.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
                 elif self.grid[i][j] is self.down_4:
+                    self.player_sprite = arcade.Sprite("background.png", self.SPRITE_SCALING_PLAYER1)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
                     self.player_sprite = arcade.Sprite("4_down.png", self.SPRITE_SCALING_PLAYER)
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
@@ -204,8 +312,11 @@ class Tanks(arcade.Window):
                     self.player_sprite.center_x = i * bw + ri
                     self.player_sprite.center_y = j * bh + ci
                     self.player_list.append(self.player_sprite)
-
-
+                elif self.grid[i][j] is self.fire:
+                    self.player_sprite = arcade.Sprite("fire.png", 0.25)
+                    self.player_sprite.center_x = i * bw + ri
+                    self.player_sprite.center_y = j * bh + ci
+                    self.player_list.append(self.player_sprite)
 
         self.player_list.draw()
 
@@ -216,10 +327,6 @@ class Tanks(arcade.Window):
 
         # This command should happen before we start drawing. It will clear
         # the screen to the background color, and erase what we drew last frame.
-
-        time.sleep(5)
-        self.grid = self.make_move(self.grid, self.turn)
-        self.turn = self.turn_change(self.turn)
         arcade.start_render()
         self.draw_screen()
 
@@ -229,7 +336,7 @@ class Tanks(arcade.Window):
 
     def turn_change(self, turn):
         if turn is 1:
-            print(turn)
+            # print(turn)
             turn = 2
         elif turn is 2:
             turn = 3
@@ -246,9 +353,45 @@ class Tanks(arcade.Window):
         need it.
         """
         self.player_list.update()
+        # print('phela')
+        # print(self.grid)
+        time.sleep(1)
+        p, q = self.get_current_pos(self.grid, self.turn)
+        if p != -1 and q != -1:
+            self.grid = self.make_move(self.grid, self.turn)
+            self.update_score_board(self.grid, self.turn)
+            # print('dosra')
+        self.turn = self.turn_change(self.turn)
+        # print('dosra')
+        # print(self.grid)
 
+    def update_score_board(self, board, turn):
+        i, j = self.get_current_pos(board, turn)
+        if i != -1 and j != -1:
+            if turn == 1:
+                if self.score_board_p1[i][j] == 0:
+                    self.score_board_p1[i][j] = 1
+                    self.score_p1 += 1
+                    print('player 1:' + str(self.score_p1))
+            elif turn == 2:
+                if self.score_board_p2[i][j] == 0:
+                    self.score_board_p2[i][j] = 2
+                    self.score_p2 += 1
+                    print('player 2:' + str(self.score_p2))
+            elif turn == 3:
+                if self.score_board_p3[i][j] == 0:
+                    self.score_board_p3[i][j] = 3
+                    self.score_p3 += 1
+                    print('player 3:' + str(self.score_p3))
+            elif turn == 4:
+                if self.score_board_p4[i][j] == 0:
+                    self.score_board_p4[i][j] = 4
+                    self.score_p4 += 1
+                    print('player 4:' + str(self.score_p4))
 
     def generate_childern(self, board, turn):
+
+        fired = False
 
         list = []
         copy1 = deepcopy(board)
@@ -257,9 +400,312 @@ class Tanks(arcade.Window):
         copy4 = deepcopy(board)
         copy5 = deepcopy(board)
         copy6 = deepcopy(board)
+        # board = deepcopy(board)
+
+        # generating fired child
+        direction = self.get_current_direction(board, turn)
+        m, n = self.get_current_pos(board, turn)
+
+        if turn == 1:
+            if direction == self.up_1:
+                for i in range(self.size):
+                    # print(n + 1)
+                    if n + i + 1 < self.size:
+                        if board[m][n + i + 1] == self.stone or board[n - i - 1][n] == self.fire:
+                            break
+                        elif board[m][n + i + 1] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m][n + i + 1])
+                            fired = True
+                            board[m][n + i + 1] = self.fire
+                            self.score_p1 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.down_1:
+                for i in range(self.size):
+                    if n - i - 1 >= 0:
+                        if board[m][n - i - 1] == self.stone or board[n - i - 1][n] == self.fire:
+                            break
+                        elif board[m][n - i - 1] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m][n - i - 1])
+                            fired = True
+                            board[m][n - i - 1] = self.fire
+                            self.score_p1 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+
+            elif direction == self.right_1:
+                for i in range(self.size):
+                    if m + i + 1 < self.size:
+                        if board[m + i + 1][n] == self.stone or board[m + i + 1][n] == self.fire:
+                            break
+                        elif board[m + i + 1][n] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m + i + 1][n])
+                            fired = True
+                            board[m + i + 1][n] = self.fire
+                            self.score_p1 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.left_1:
+                for i in range(self.size):
+                    if m - i - 1 >= 0:
+                        if board[m - i - 1][n] == self.stone or board[m - i - 1][n] == self.fire:
+                            break
+                        elif board[m - i - 1][n] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m - i - 1][n])
+                            fired = True
+                            board[m - i - 1][n] = self.fire
+                            self.score_p1 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+        elif turn == 2:
+            if direction == self.up_2:
+                for i in range(self.size):
+                    if n + i + 1 < self.size:
+                        if board[m][n + i + 1] == self.stone or board[m][n + i + 1] == self.fire:
+                            break
+                        elif board[m][n + i + 1] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(board[m][n + i + 1])
+                            print(turn)
+                            fired = True
+                            board[m][n + i + 1] = self.fire
+                            self.score_p2 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.down_2:
+                for i in range(self.size):
+                    if n - i - 1 >= 0:
+                        if board[m][n - i - 1] == self.stone or board[m][n - i - 1] == self.fire:
+                            break
+                        elif board[m][n - i - 1] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m][n - i - 1])
+                            fired = True
+                            board[m][n - i - 1] = self.fire
+                            self.score_p2 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.right_2:
+                for i in range(self.size):
+                    if m + i + 1 < self.size:
+                        if board[m + i + 1][n] == self.stone or board[m + i + 1][n] == self.fire:
+                            break
+                        elif board[m + i + 1][n] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m + i + 1][n])
+                            fired = True
+                            board[m + i + 1][n] = self.fire
+                            self.score_p2 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.left_2:
+                for i in range(self.size):
+                    if m - i - 1 >= 0:
+                        if board[m - i - 1][n] == self.stone or board[m - i - 1][n] == self.fire:
+                            print()
+                            print('Reached...')
+                            break
+                        elif board[m - i - 1][n] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m - i - 1][n])
+                            fired = True
+                            board[m - i - 1][n] = self.fire
+                            self.score_p2 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+        elif turn == 3:
+            if direction == self.up_3:
+                for i in range(self.size):
+                    if n + i + 1 < self.size:
+                        if board[m][n + i + 1] == self.stone or board[m][n + i + 1] == self.fire:
+                            break
+                        elif board[m][n + i + 1] == 0:
+                            break
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m][n + i + 1])
+                            fired = True
+                            board[m][n + i + 1] = self.fire
+                            self.score_p3 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.down_3:
+                for i in range(self.size):
+                    if n - i - 1 >= 0:
+                        if board[m][n - i - 1] == self.stone or board[m][n - i - 1] == self.fire:
+                            break
+                        elif board[m][n - i - 1] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            fired = True
+                            board[m][n - i - 1] = self.fire
+                            self.score_p3 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.right_3:
+                for i in range(self.size):
+                    if m + i + 1 < self.size:
+                        if board[m + i + 1][n] == self.stone or board[m + i + 1][n] == self.fire:
+                            break
+                        elif board[m + i + 1][n] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            print(board[m + i + 1][n])
+                            fired = True
+                            board[m + i + 1][n] = self.fire
+                            self.score_p3 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.left_3:
+                for i in range(self.size):
+                    if m - i - 1 >= 0:
+                        if board[m - i - 1][n] == self.stone or board[m - i - 1][n] == self.fire:
+                            break
+                        elif board[m - i - 1][n] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            fired = True
+                            board[m - i - 1][n] = self.fire
+                            self.score_p3 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+        elif turn == 4:
+            if direction == self.up_4:
+                for i in range(self.size):
+                    if n + i + 1 < self.size:
+                        if board[m][n + i + 1] == self.stone or board[m][n + i + 1] == self.fire:
+                            break
+                        elif board[m][n + i + 1] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            fired = True
+                            board[m][n + i + 1] = self.fire
+                            self.score_p4 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.down_4:
+                for i in range(self.size):
+                    if n - i - 1 >= 0:
+                        if board[m][n - i - 1] == self.stone or board[m][n - i - 1] == self.fire:
+                            break
+                        elif board[m][n - i - 1] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            fired = True
+                            board[m][n - i - 1] = self.fire
+                            self.score_p4 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.right_4:
+                for i in range(self.size):
+                    if m + i + 1 < self.size:
+                        if board[m + i + 1][n] == self.stone or board[m + i + 1][n] == self.fire:
+                            break
+                        elif board[m + i + 1][n] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            fired = True
+                            board[m + i + 1][n] = self.fire
+                            self.score_p4 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+            elif direction == self.left_4:
+                for i in range(self.size):
+                    if m - i - 1 >= 0:
+                        if board[m - i - 1][n] == self.stone or board[m - i - 1][n] == self.fire:
+                            break
+                        elif board[m - i - 1][n] == 0:
+                            continue
+                        else:
+                            print('fired...')
+                            print(turn)
+                            fired = True
+                            board[m - i - 1][n] = self.fire
+                            self.score_p4 += self.tank_destroying_score
+                            list.append(board)
+                            break
+                    else:
+                        break
+
+        if fired == True:
+            return list
 
         i, j = self.get_current_pos(board, turn)
-        direction = self.get_current_direction(board, turn)
+
+        # board = self.make_fire(board, turn)
+        # print(board)
+        # if board != None:
+        #     list.append(board)
 
         if j + 1 < self.size:
             if copy1[i][j + 1] is 0:
@@ -299,26 +745,173 @@ class Tanks(arcade.Window):
         return list
 
     def get_childern__by_direction(self, direction, turn):
-        if direction is turn*10 + 1 or direction is turn*10 + 3:
+        if direction is turn * 10 + 1 or direction is turn * 10 + 3:
             return turn * 10 + 2, turn * 10 + 4
-        elif direction is turn*10 + 2 or direction is turn*10 + 4:
+        elif direction is turn * 10 + 2 or direction is turn * 10 + 4:
             return turn * 10 + 1, turn * 10 + 3
-
 
     def get_current_pos(self, board, turn):
         for i in range(self.size):
             for j in range(self.size):
-                if (board[i][j] is turn*10+1) or (board[i][j] is turn*10+2) or (board[i][j] is turn*10+3) or (board[i][j] is turn*10+4):
+                if (board[i][j] is turn * 10 + 1) or (board[i][j] is turn * 10 + 2) or (
+                        board[i][j] is turn * 10 + 3) or (board[i][j] is turn * 10 + 4):
                     return i, j
+        else:
+            return -1, -1
 
     def get_current_direction(self, board, turn):
         i, j = self.get_current_pos(board, turn)
-        direction = board[i][j]
-        return direction
+        if i == -1 and j == -1:
+            return -1
+        else:
+            direction = board[i][j]
+            return direction
 
     def make_move(self, board, turn):
         return random.choice(self.generate_childern(board, turn))
 
+    # def make_fire(self, board, turn):
+    #     direction = self.get_current_direction(board, turn)
+    #     m, n = self.get_current_pos(board, turn)
+    #
+    #     if turn == 1:
+    #         if direction == self.up_1:
+    #             for i in range(self.size):
+    #                 print(n + 1)
+    #                 if n + i + 1 < self.size:
+    #                     print(n + 1)
+    #                     if board[m][n + i + 1] == self.stone:
+    #                         pass
+    #                     elif board[m][n + i + 1] != 0:
+    #                         print(board[m][n + i + 1])
+    #                         board[m][n + i + 1] = self.fire
+    #                         return board
+    #         elif direction == self.down_1:
+    #             for i in range(self.size):
+    #                 if n - i > 0:
+    #                     if board[m][n - i] == self.stone:
+    #                         pass
+    #                     elif board[m][n - i] != 0:
+    #                         print(board[m][n + i + 1])
+    #                         board[m][n - i] = self.fire
+    #                         return board
+    #         elif direction == self.right_1:
+    #             for i in range(self.size):
+    #                 if m + i < self.size:
+    #                     if board[m + i][n] == self.stone:
+    #                         pass
+    #                     elif board[m + i][n] != 0:
+    #                         print(board[m][n + i + 1])
+    #                         board[m + i][n] = self.fire
+    #                         return board
+    #         elif direction == self.left_1:
+    #             for i in range(self.size):
+    #                 if m - i > 0:
+    #                     if board[m - i][n] == self.stone:
+    #                         pass
+    #                     elif board[m - i][n] != 0:
+    #                         print(board[m][n + i + 1])
+    #                         board[m - i][n] = self.fire
+    #                         return board
+    #     elif turn == 2:
+    #         if direction == self.up_2:
+    #             for i in range(self.size):
+    #                 if n + i + 1 < self.size:
+    #                     if board[m][n + i + 1] == self.stone:
+    #                         pass
+    #                     elif board[m][n + i + 1] != 0:
+    #                         board[m][n + i + 1] = self.fire
+    #                         return board
+    #         elif direction == self.down_2:
+    #             for i in range(self.size):
+    #                 if n - i > 0:
+    #                     if board[m][n - i] == self.stone:
+    #                         pass
+    #                     elif board[m][n - i] != 0:
+    #                         board[m][n - i] = self.fire
+    #                         return board
+    #         elif direction == self.right_2:
+    #             for i in range(self.size):
+    #                 if m + i < self.size:
+    #                     if board[m + i][n] == self.stone:
+    #                         pass
+    #                     elif board[m + i][n] != 0:
+    #                         board[m + i][n] = self.fire
+    #                         return board
+    #         elif direction == self.left_2:
+    #             for i in range(self.size):
+    #                 if m - i > 0:
+    #                     if board[m - i][n] == self.stone:
+    #                         pass
+    #                     elif board[m - i][n] != 0:
+    #                         board[m - i][n] = self.fire
+    #                         return board
+    #     elif turn == 3:
+    #         if direction == self.up_3:
+    #             for i in range(self.size):
+    #                 if n + i + 1 < self.size:
+    #                     if board[m][n + i + 1] == self.stone:
+    #                         pass
+    #                     elif board[m][n + i + 1] != 0:
+    #                         board[m][n + i + 1] = self.fire
+    #                         return board
+    #         elif direction == self.down_3:
+    #             for i in range(self.size):
+    #                 if n - i > 0:
+    #                     if board[m][n - i] == self.stone:
+    #                         pass
+    #                     elif board[m][n - i] != 0:
+    #                         board[m][n - i] = self.fire
+    #                         return board
+    #         elif direction == self.right_3:
+    #             for i in range(self.size):
+    #                 if m + i < self.size:
+    #                     if board[m + i][n] == self.stone:
+    #                         pass
+    #                     elif board[m + i][n] != 0:
+    #                         board[m + i][n] = self.fire
+    #                         return board
+    #         elif direction == self.left_3:
+    #             for i in range(self.size):
+    #                 if m - i > 0:
+    #                     if board[m - i][n] == self.stone:
+    #                         pass
+    #                     elif board[m - i][n] != 0:
+    #                         board[m - i][n] = self.fire
+    #                         return board
+    #     elif turn == 4:
+    #         if direction == self.up_4:
+    #             for i in range(self.size):
+    #                 if n + i + 1 < self.size:
+    #                     if board[m][n + i + 1] == self.stone:
+    #                         pass
+    #                     elif board[m][n + i + 1] != 0:
+    #                         board[m][n + i + 1] = self.fire
+    #                         return board
+    #         elif direction == self.down_4:
+    #             for i in range(self.size):
+    #                 if n - i > 0:
+    #                     if board[m][n - i] == self.stone:
+    #                         pass
+    #                     elif board[m][n - i] != 0:
+    #                         board[m][n - i] = self.fire
+    #                         return board
+    #         elif direction == self.right_4:
+    #             for i in range(self.size):
+    #                 if m + i < self.size:
+    #                     if board[m + i][n] == self.stone:
+    #                         pass
+    #                     elif board[m + i][n] != 0:
+    #                         board[m + i][n] = self.fire
+    #                         return board
+    #         elif direction == self.left_4:
+    #             for i in range(self.size):
+    #                 if m - i > 0:
+    #                     if board[m - i][n] == self.stone:
+    #                         pass
+    #                     elif board[m - i][n] != 0:
+    #                         board[m - i][n] = self.fire
+    #                         return board
 
 
 def main():
@@ -327,7 +920,5 @@ def main():
     game.setup()
     arcade.run()
 
+
 main()
-
-
-
