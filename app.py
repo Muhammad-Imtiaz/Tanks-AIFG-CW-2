@@ -4,7 +4,10 @@ import time
 import arcade
 import math
 import sys
-
+import ANN
+import numpy
+import pandas as pd
+import xlwt
 
 class Tanks(arcade.Window):
     size = 15
@@ -12,6 +15,11 @@ class Tanks(arcade.Window):
     grid = []
 
     fire = 50
+
+    is_dead = 0
+
+    input = 225
+    hidden = 10
 
     score_board_p1 = []
     score_board_p2 = []
@@ -49,6 +57,11 @@ class Tanks(arcade.Window):
     SPRITE_SCALING_PLAYER1 = 0.82
     stone = 100
 
+    w1 = []
+    w2 = []
+
+    total_turn = 1
+
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
         self.width = width
@@ -59,6 +72,10 @@ class Tanks(arcade.Window):
         arcade.set_background_color(arcade.color.WHITE)
         self.initialize_grid()
         self.initialize_score_board()
+        self.w1 = self.generate_matrix(self.input, self.hidden)
+        self.w2 = self.generate_matrix(self.hidden, 7)
+        # dataframe = pd.DataFrame({'W1': [], 'w2': [], 'score': []})
+        # dataframe.to_excel('data.xls', index=False)
 
     def initialize_grid(self):
         for row in range(self.size):
@@ -67,7 +84,7 @@ class Tanks(arcade.Window):
                 self.grid[row].append(0)
 
         self.grid[0][0] = self.right_1
-        self.grid[0][1] = self.down_2
+        self.grid[0][self.size - 1] = self.down_2
         self.grid[self.size - 1][0] = self.up_4
         self.grid[self.size - 1][self.size - 1] = self.left_3
 
@@ -103,6 +120,8 @@ class Tanks(arcade.Window):
         self.grid[11][4] = self.stone
         self.grid[11][10] = self.stone
         self.grid[11][11] = self.stone
+
+
 
     def initialize_score_board(self):
         for row in range(self.size):
@@ -358,12 +377,45 @@ class Tanks(arcade.Window):
         time.sleep(1)
         p, q = self.get_current_pos(self.grid, self.turn)
         if p != -1 and q != -1:
-            self.grid = self.make_move(self.grid, self.turn)
+            if self.turn == 1:
+                list = (self.generate_childern(self.grid, self.turn))
+                output = len(list)
+                # print(str(output) + ' Length')
+                one_D = self.generate_1D(self.grid)
+                m = []
+                m.extend(self.w2[:output + 1])
+                # print(m)
+
+                score = ANN.predict_outputs(self.w1, self.w2, one_D, output)
+                # print(score, 'scroe')
+                self.grid = list[score]
+                # print(self.grid)
+            else:
+                self.grid = self.make_move(self.grid, self.turn)
+                print(self.grid)
             self.update_score_board(self.grid, self.turn)
             # print('dosra')
         self.turn = self.turn_change(self.turn)
+        self.total_turn += 1
+        if self.total_turn == 1000 or self.is_dead == 3:
+            print(self.winner())
+            time.sleep(2)
+            sys.exit('Game Exit')
+
         # print('dosra')
         # print(self.grid)
+
+    def winner(self):
+        maximum = max(self.score_p1, self.score_p2, self.score_p3, self.score_p4)
+        if maximum == self.score_p1:
+            return 'Player 1 win!!!'
+        elif maximum == self.score_p2:
+            return 'Player 2 win!!!'
+        elif maximum == self.score_p3:
+            return 'Player 3 win!!!'
+        elif maximum == self.score_p4:
+            return 'Player 4 win!!!'
+
 
     def update_score_board(self, board, turn):
         i, j = self.get_current_pos(board, turn)
@@ -372,22 +424,22 @@ class Tanks(arcade.Window):
                 if self.score_board_p1[i][j] == 0:
                     self.score_board_p1[i][j] = 1
                     self.score_p1 += 1
-                    print('player 1:' + str(self.score_p1))
+                    # print('player 1:' + str(self.score_p1))
             elif turn == 2:
                 if self.score_board_p2[i][j] == 0:
                     self.score_board_p2[i][j] = 2
                     self.score_p2 += 1
-                    print('player 2:' + str(self.score_p2))
+                    # print('player 2:' + str(self.score_p2))
             elif turn == 3:
                 if self.score_board_p3[i][j] == 0:
                     self.score_board_p3[i][j] = 3
                     self.score_p3 += 1
-                    print('player 3:' + str(self.score_p3))
+                    # print('player 3:' + str(self.score_p3))
             elif turn == 4:
                 if self.score_board_p4[i][j] == 0:
                     self.score_board_p4[i][j] = 4
                     self.score_p4 += 1
-                    print('player 4:' + str(self.score_p4))
+                    # print('player 4:' + str(self.score_p4))
 
     def generate_childern(self, board, turn):
 
@@ -416,11 +468,12 @@ class Tanks(arcade.Window):
                         elif board[m][n + i + 1] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             print(board[m][n + i + 1])
                             fired = True
                             board[m][n + i + 1] = self.fire
+                            self.is_dead += 1
                             self.score_p1 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -434,11 +487,12 @@ class Tanks(arcade.Window):
                         elif board[m][n - i - 1] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             print(board[m][n - i - 1])
                             fired = True
                             board[m][n - i - 1] = self.fire
+                            self.is_dead += 1
                             self.score_p1 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -453,11 +507,12 @@ class Tanks(arcade.Window):
                         elif board[m + i + 1][n] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             print(board[m + i + 1][n])
                             fired = True
                             board[m + i + 1][n] = self.fire
+                            self.is_dead += 1
                             self.score_p1 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -471,11 +526,12 @@ class Tanks(arcade.Window):
                         elif board[m - i - 1][n] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             print(board[m - i - 1][n])
                             fired = True
                             board[m - i - 1][n] = self.fire
+                            self.is_dead += 1
                             self.score_p1 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -490,11 +546,12 @@ class Tanks(arcade.Window):
                         elif board[m][n + i + 1] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(board[m][n + i + 1])
-                            print(turn)
+                            # print('fired...')
+                            # print(board[m][n + i + 1])
+                            # print(turn)
                             fired = True
                             board[m][n + i + 1] = self.fire
+                            self.is_dead += 1
                             self.score_p2 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -508,11 +565,12 @@ class Tanks(arcade.Window):
                         elif board[m][n - i - 1] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
-                            print(board[m][n - i - 1])
+                            # print('fired...')
+                            # print(turn)
+                            # print(board[m][n - i - 1])
                             fired = True
                             board[m][n - i - 1] = self.fire
+                            self.is_dead += 1
                             self.score_p2 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -526,11 +584,12 @@ class Tanks(arcade.Window):
                         elif board[m + i + 1][n] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
-                            print(board[m + i + 1][n])
+                            # print('fired...')
+                            # print(turn)
+                            # print(board[m + i + 1][n])
                             fired = True
                             board[m + i + 1][n] = self.fire
+                            self.is_dead += 1
                             self.score_p2 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -540,17 +599,18 @@ class Tanks(arcade.Window):
                 for i in range(self.size):
                     if m - i - 1 >= 0:
                         if board[m - i - 1][n] == self.stone or board[m - i - 1][n] == self.fire:
-                            print()
-                            print('Reached...')
+                            # print()
+                            # print('Reached...')
                             break
                         elif board[m - i - 1][n] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             print(board[m - i - 1][n])
                             fired = True
                             board[m - i - 1][n] = self.fire
+                            self.is_dead += 1
                             self.score_p2 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -565,11 +625,12 @@ class Tanks(arcade.Window):
                         elif board[m][n + i + 1] == 0:
                             break
                         else:
-                            print('fired...')
-                            print(turn)
-                            print(board[m][n + i + 1])
+                            # print('fired...')
+                            # print(turn)
+                            # print(board[m][n + i + 1])
                             fired = True
                             board[m][n + i + 1] = self.fire
+                            self.is_dead += 1
                             self.score_p3 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -583,10 +644,11 @@ class Tanks(arcade.Window):
                         elif board[m][n - i - 1] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             fired = True
                             board[m][n - i - 1] = self.fire
+                            self.is_dead += 1
                             self.score_p3 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -600,11 +662,12 @@ class Tanks(arcade.Window):
                         elif board[m + i + 1][n] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
-                            print(board[m + i + 1][n])
+                            # print('fired...')
+                            # print(turn)
+                            # print(board[m + i + 1][n])
                             fired = True
                             board[m + i + 1][n] = self.fire
+                            self.is_dead += 1
                             self.score_p3 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -618,10 +681,11 @@ class Tanks(arcade.Window):
                         elif board[m - i - 1][n] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             fired = True
                             board[m - i - 1][n] = self.fire
+                            self.is_dead += 1
                             self.score_p3 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -636,10 +700,11 @@ class Tanks(arcade.Window):
                         elif board[m][n + i + 1] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             fired = True
                             board[m][n + i + 1] = self.fire
+                            self.is_dead += 1
                             self.score_p4 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -653,10 +718,11 @@ class Tanks(arcade.Window):
                         elif board[m][n - i - 1] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             fired = True
                             board[m][n - i - 1] = self.fire
+                            self.is_dead += 1
                             self.score_p4 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -670,10 +736,11 @@ class Tanks(arcade.Window):
                         elif board[m + i + 1][n] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             fired = True
                             board[m + i + 1][n] = self.fire
+                            self.is_dead += 1
                             self.score_p4 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -687,10 +754,11 @@ class Tanks(arcade.Window):
                         elif board[m - i - 1][n] == 0:
                             continue
                         else:
-                            print('fired...')
-                            print(turn)
+                            # print('fired...')
+                            # print(turn)
                             fired = True
                             board[m - i - 1][n] = self.fire
+                            self.is_dead += 1
                             self.score_p4 += self.tank_destroying_score
                             list.append(board)
                             break
@@ -770,149 +838,24 @@ class Tanks(arcade.Window):
     def make_move(self, board, turn):
         return random.choice(self.generate_childern(board, turn))
 
-    # def make_fire(self, board, turn):
-    #     direction = self.get_current_direction(board, turn)
-    #     m, n = self.get_current_pos(board, turn)
-    #
-    #     if turn == 1:
-    #         if direction == self.up_1:
-    #             for i in range(self.size):
-    #                 print(n + 1)
-    #                 if n + i + 1 < self.size:
-    #                     print(n + 1)
-    #                     if board[m][n + i + 1] == self.stone:
-    #                         pass
-    #                     elif board[m][n + i + 1] != 0:
-    #                         print(board[m][n + i + 1])
-    #                         board[m][n + i + 1] = self.fire
-    #                         return board
-    #         elif direction == self.down_1:
-    #             for i in range(self.size):
-    #                 if n - i > 0:
-    #                     if board[m][n - i] == self.stone:
-    #                         pass
-    #                     elif board[m][n - i] != 0:
-    #                         print(board[m][n + i + 1])
-    #                         board[m][n - i] = self.fire
-    #                         return board
-    #         elif direction == self.right_1:
-    #             for i in range(self.size):
-    #                 if m + i < self.size:
-    #                     if board[m + i][n] == self.stone:
-    #                         pass
-    #                     elif board[m + i][n] != 0:
-    #                         print(board[m][n + i + 1])
-    #                         board[m + i][n] = self.fire
-    #                         return board
-    #         elif direction == self.left_1:
-    #             for i in range(self.size):
-    #                 if m - i > 0:
-    #                     if board[m - i][n] == self.stone:
-    #                         pass
-    #                     elif board[m - i][n] != 0:
-    #                         print(board[m][n + i + 1])
-    #                         board[m - i][n] = self.fire
-    #                         return board
-    #     elif turn == 2:
-    #         if direction == self.up_2:
-    #             for i in range(self.size):
-    #                 if n + i + 1 < self.size:
-    #                     if board[m][n + i + 1] == self.stone:
-    #                         pass
-    #                     elif board[m][n + i + 1] != 0:
-    #                         board[m][n + i + 1] = self.fire
-    #                         return board
-    #         elif direction == self.down_2:
-    #             for i in range(self.size):
-    #                 if n - i > 0:
-    #                     if board[m][n - i] == self.stone:
-    #                         pass
-    #                     elif board[m][n - i] != 0:
-    #                         board[m][n - i] = self.fire
-    #                         return board
-    #         elif direction == self.right_2:
-    #             for i in range(self.size):
-    #                 if m + i < self.size:
-    #                     if board[m + i][n] == self.stone:
-    #                         pass
-    #                     elif board[m + i][n] != 0:
-    #                         board[m + i][n] = self.fire
-    #                         return board
-    #         elif direction == self.left_2:
-    #             for i in range(self.size):
-    #                 if m - i > 0:
-    #                     if board[m - i][n] == self.stone:
-    #                         pass
-    #                     elif board[m - i][n] != 0:
-    #                         board[m - i][n] = self.fire
-    #                         return board
-    #     elif turn == 3:
-    #         if direction == self.up_3:
-    #             for i in range(self.size):
-    #                 if n + i + 1 < self.size:
-    #                     if board[m][n + i + 1] == self.stone:
-    #                         pass
-    #                     elif board[m][n + i + 1] != 0:
-    #                         board[m][n + i + 1] = self.fire
-    #                         return board
-    #         elif direction == self.down_3:
-    #             for i in range(self.size):
-    #                 if n - i > 0:
-    #                     if board[m][n - i] == self.stone:
-    #                         pass
-    #                     elif board[m][n - i] != 0:
-    #                         board[m][n - i] = self.fire
-    #                         return board
-    #         elif direction == self.right_3:
-    #             for i in range(self.size):
-    #                 if m + i < self.size:
-    #                     if board[m + i][n] == self.stone:
-    #                         pass
-    #                     elif board[m + i][n] != 0:
-    #                         board[m + i][n] = self.fire
-    #                         return board
-    #         elif direction == self.left_3:
-    #             for i in range(self.size):
-    #                 if m - i > 0:
-    #                     if board[m - i][n] == self.stone:
-    #                         pass
-    #                     elif board[m - i][n] != 0:
-    #                         board[m - i][n] = self.fire
-    #                         return board
-    #     elif turn == 4:
-    #         if direction == self.up_4:
-    #             for i in range(self.size):
-    #                 if n + i + 1 < self.size:
-    #                     if board[m][n + i + 1] == self.stone:
-    #                         pass
-    #                     elif board[m][n + i + 1] != 0:
-    #                         board[m][n + i + 1] = self.fire
-    #                         return board
-    #         elif direction == self.down_4:
-    #             for i in range(self.size):
-    #                 if n - i > 0:
-    #                     if board[m][n - i] == self.stone:
-    #                         pass
-    #                     elif board[m][n - i] != 0:
-    #                         board[m][n - i] = self.fire
-    #                         return board
-    #         elif direction == self.right_4:
-    #             for i in range(self.size):
-    #                 if m + i < self.size:
-    #                     if board[m + i][n] == self.stone:
-    #                         pass
-    #                     elif board[m + i][n] != 0:
-    #                         board[m + i][n] = self.fire
-    #                         return board
-    #         elif direction == self.left_4:
-    #             for i in range(self.size):
-    #                 if m - i > 0:
-    #                     if board[m - i][n] == self.stone:
-    #                         pass
-    #                     elif board[m - i][n] != 0:
-    #                         board[m - i][n] = self.fire
-    #                         return board
 
+    #returns matrix of size a, b
+    def generate_matrix(self, a, b):
+        list = []
+        for i in range(a):
+            list.append([])
+            for j in range(b):
+                list[i].append(random.randint(-10, 10))
+
+        return list
+
+    def generate_1D(self, matrix):
+        output = []
+        for index, data in enumerate(matrix):
+            for j in range(len(data)):
+                output.append(matrix[index][j])
+
+        return output
 
 def main():
     """ Main method """
